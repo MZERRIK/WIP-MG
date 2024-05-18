@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suivi des Voitures en Réparation Carrosserie</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        input[type=text] {
+            width: 100%;
+            padding: 8px;
+            margin-top: 6px;
+            margin-bottom: 16px;
+            resize: vertical;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Suivi des Voitures en Réparation Carrosserie</h2>
+
+<form id="carForm">
+    <label for="immatricule">Immatricule:</label>
+    <input type="text" id="immatricule" name="immatricule" required><br>
+
+    <label for="nom">Nom Complet:</label>
+    <input type="text" id="nom" name="nom" required><br>
+
+    <label for="model">Modèle:</label>
+    <input type="text" id="model" name="model" required><br>
+
+    <label for="assurance">Assurance:</label>
+    <input type="text" id="assurance" name="assurance" required><br>
+
+    <label for="expert">Expert:</label>
+    <input type="text" id="expert" name="expert" required><br>
+
+    <label for="etat">État:</label>
+    <input type="text" id="etat" name="etat" required><br>
+
+    <button type="button" onclick="addCar()">Ajouter Voiture</button>
+</form>
+
+<h2>Liste des Voitures en Réparation</h2>
+
+<input type="text" id="searchInput" onkeyup="searchCars()" placeholder="Rechercher par immatricule...">
+
+<table id="carTable">
+    <tr>
+        <th>Immatricule</th>
+        <th>Nom Complet</th>
+        <th>Modèle</th>
+        <th>Assurance</th>
+        <th>Expert</th>
+        <th>État</th>
+        <th>Action</th>
+    </tr>
+</table>
+
+<script>
+    function addCar() {
+        var form = document.getElementById("carForm");
+        var table = document.getElementById("carTable");
+        var newRow = table.insertRow(-1);
+        var cells = [];
+        for (var i = 0; i < 7; i++) {
+            cells.push(newRow.insertCell(i));
+        }
+        cells[0].innerHTML = form["immatricule"].value;
+        cells[1].innerHTML = form["nom"].value;
+        cells[2].innerHTML = form["model"].value;
+        cells[3].innerHTML = form["assurance"].value;
+        cells[4].innerHTML = form["expert"].value;
+        cells[5].innerHTML = form["etat"].value;
+        cells[6].innerHTML = "<button onclick='editCar(this)'>Modifier</button>";
+        form.reset();
+    }
+
+    function editCar(button) {
+        var row = button.parentNode.parentNode;
+        var cells = row.getElementsByTagName("td");
+        var form = document.getElementById("carForm");
+        form["immatricule"].value = cells[0].innerHTML;
+        form["nom"].value = cells[1].innerHTML;
+        form["model"].value = cells[2].innerHTML;
+        form["assurance"].value = cells[3].innerHTML;
+        form["expert"].value = cells[4].innerHTML;
+        form["etat"].value = cells[5].innerHTML;
+        row.remove();
+    }
+
+    function searchCars() {
+        var input = document.getElementById("searchInput");
+        var filter = input.value.toUpperCase();
+        var table = document.getElementById("carTable");
+        var rows = table.getElementsByTagName("tr");
+        for (var i = 1; i < rows.length; i++) {
+            var cells = rows[i].getElementsByTagName("td")[0];
+            if (cells) {
+                var textValue = cells.textContent || cells.innerText;
+                if (textValue.toUpperCase().indexOf(filter) > -1) {
+                    rows[i].style.display = "";
+                } else {
+                    rows[i].style.display = "none";
+                }
+            }
+        }
+    }
+</script>
+
+</body>
+</html>
+<script>
+    // Récupération des voitures depuis le stockage local s'il y en a
+    var cars = JSON.parse(localStorage.getItem("cars")) || [];
+
+    // Afficher les voitures au chargement de la page
+    displayCars();
+
+    function addCar() {
+        var form = document.getElementById("carForm");
+        var car = {
+            immatricule: form["immatricule"].value,
+            nom: form["nom"].value,
+            model: form["model"].value,
+            assurance: form["assurance"].value,
+            expert: form["expert"].value,
+            etat: form["etat"].value
+        };
+        cars.push(car);
+        localStorage.setItem("cars", JSON.stringify(cars));
+        displayCars();
+        form.reset();
+    }
+
+    function editCar(button) {
+        var row = button.parentNode.parentNode;
+        var index = row.rowIndex - 1; // -1 because of the table header
+        var car = cars[index];
+        var form = document.getElementById("carForm");
+        form["immatricule"].value = car.immatricule;
+        form["nom"].value = car.nom;
+        form["model"].value = car.model;
+        form["assurance"].value = car.assurance;
+        form["expert"].value = car.expert;
+        form["etat"].value = car.etat;
+        cars.splice(index, 1); // Remove the car from the array
+        localStorage.setItem("cars", JSON.stringify(cars));
+        displayCars();
+    }
+
+    function displayCars() {
+        var table = document.getElementById("carTable");
+        table.innerHTML = ""; // Clear table content
+        var headerRow = table.insertRow(0);
+        ["Immatricule", "Nom Complet", "Modèle", "Assurance", "Expert", "État", "Action"].forEach(function (headerText) {
+            var th = document.createElement("th");
+            th.textContent = headerText;
+            headerRow.appendChild(th);
+        });
+        cars.forEach(function (car) {
+            var row = table.insertRow(-1);
+            Object.values(car).forEach(function (value) {
+                var cell = row.insertCell(-1);
+                cell.textContent = value;
+            });
+            var actionCell = row.insertCell(-1);
+            actionCell.innerHTML = "<button onclick='editCar(this)'>Modifier</button>";
+        });
+    }
+
+    function searchCars() {
+        var input = document.getElementById("searchInput");
+        var filter = input.value.toUpperCase();
+        var table = document.getElementById("carTable");
+        var rows = table.getElementsByTagName("tr");
+        for (var i = 1; i < rows.length; i++) {
+            var cells = rows[i].getElementsByTagName("td")[0];
+            if (cells) {
+                var textValue = cells.textContent || cells.innerText;
+                if (textValue.toUpperCase().indexOf(filter) > -1) {
+                    rows[i].style.display = "";
+                } else {
+                    rows[i].style.display = "none";
+                }
+            }
+        }
+    }
+</script>
+
+
